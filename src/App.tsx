@@ -1,576 +1,335 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-// Initial starting data
-const INITIAL_SUBSCRIPTIONS = [
-  {
-    id: 1,
-    name: 'Netflix Premium',
-    category: 'Streaming',
-    cost: 22.99,
-    lastCharged: '2 days ago',
-    status: 'Active',
-    isHiddenOrUnused: false,
-  },
-  {
-    id: 2,
-    name: 'Cloud Storage 200GB',
-    category: 'Utilities',
-    cost: 2.99,
-    lastCharged: '5 days ago',
-    status: 'Active',
-    isHiddenOrUnused: false,
-  },
-  {
-    id: 3,
-    name: 'Forgotten Gym Pass',
-    category: 'Fitness',
-    cost: 45.0,
-    lastCharged: '45 days ago (Unused)',
-    status: 'At Risk',
-    isHiddenOrUnused: true,
-  },
-];
+// Animated Splash Screen Component
+const SplashScreen = () => {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        width: '100vw',
+        backgroundColor: '#0b132b',
+        color: '#ffffff',
+        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        zIndex: 9999,
+      }}
+    >
+      <div style={{ textAlign: 'center', padding: '20px' }}>
+        <h1 style={{ fontSize: '3rem', marginBottom: '0.5rem', fontWeight: 'bold' }}>
+          ⚡ ClarityAudit
+        </h1>
+        <p style={{ color: '#8892b0', fontSize: '1.1rem', marginBottom: '1.5rem' }}>
+          Automated Micro-Subscription & Bill Manager
+        </p>
+        <div
+          style={{
+            width: '40px',
+            height: '40px',
+            border: '4px solid rgba(255, 255, 255, 0.1)',
+            borderTop: '4px solid #00f2fe',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto',
+          }}
+        />
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    </div>
+  );
+};
 
-export default function SubscriptionAuditor() {
-  const [subscriptions, setSubscriptions] = useState(INITIAL_SUBSCRIPTIONS);
-  const [loadingAudit, setLoadingAudit] = useState(false);
-  const [auditMessage, setAuditMessage] = useState('');
+// Main Application Component
+export default function App() {
+  const [loading, setLoading] = useState(true);
 
-  // Interactive Filters
-  const [filter, setFilter] = useState('All');
+  useEffect(() => {
+    // Displays splash screen interface for 1.5 seconds on startup
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1500);
 
-  // Interactive Form Inputs
-  const [newName, setNewName] = useState('');
-  const [newCost, setNewCost] = useState('');
-  const [newCategory, setNewCategory] = useState('Streaming');
+    return () => clearTimeout(timer);
+  }, []);
 
-  // Total spend calculation
-  const totalMonthlySpend = subscriptions
-    .filter((sub) => sub.status === 'Active' || sub.status === 'At Risk')
-    .reduce((acc, sub) => acc + sub.cost, 0)
-    .toFixed(2);
-
-  // Add new subscription
-  const handleAddSubscription = (e) => {
-    e.preventDefault();
-    if (!newName || !newCost) return;
-
-    const newSub = {
-      id: Date.now(),
-      name: newName,
-      category: newCategory,
-      cost: parseFloat(newCost),
-      lastCharged: 'Just added',
-      status: 'Active',
-      isHiddenOrUnused: false,
-    };
-
-    setSubscriptions([newSub, ...subscriptions]);
-    setNewName('');
-    setNewCost('');
-  };
-
-  // Delete item completely
-  const handleDeleteSubscription = (id) => {
-    setSubscriptions(subscriptions.filter((sub) => sub.id !== id));
-  };
-
-  // Cancel item
-  const handleCancelSubscription = (id) => {
-    setSubscriptions((prev) =>
-      prev.map((sub) =>
-        sub.id === id ? { ...sub, status: 'Cancelled ($Saved)', cost: 0 } : sub
-      )
-    );
-  };
-
-  // Run audit simulation
-  const handleDeepAudit = () => {
-    setLoadingAudit(true);
-    setAuditMessage(
-      'Scanning transaction history for hidden recurring loops...'
-    );
-
-    setTimeout(() => {
-      setLoadingAudit(false);
-      setAuditMessage('Audit complete! Transaction scan finished.');
-    }, 2000);
-  };
-
-  // Filter subscriptions
-  const displayedSubscriptions = subscriptions.filter((sub) => {
-    if (filter === 'Active')
-      return sub.status === 'Active' || sub.status === 'At Risk';
-    if (filter === 'Cancelled') return sub.status === 'Cancelled ($Saved)';
-    return true;
-  });
+  if (loading) {
+    return <SplashScreen />;
+  }
 
   return (
     <div
       style={{
-        backgroundColor: '#0F172A',
-        color: '#F8FAFC',
         minHeight: '100vh',
-        padding: '24px',
-        fontFamily: 'system-ui, -apple-system, sans-serif',
+        backgroundColor: '#0b132b',
+        color: '#ffffff',
+        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        padding: '2rem 1rem',
       }}
     >
-      <div style={{ maxWidth: '850px', margin: '0 auto' }}>
-        {/* Header Section */}
+      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        {/* Header */}
         <header
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
+            marginBottom: '2rem',
             flexWrap: 'wrap',
-            gap: '16px',
-            borderBottom: '2px solid #334155',
-            paddingBottom: '20px',
-            marginBottom: '24px',
+            gap: '1rem',
           }}
         >
           <div>
-            <h1
-              style={{
-                fontSize: '32px',
-                margin: '0 0 6px 0',
-                fontWeight: '800',
-                color: '#FFFFFF',
-              }}
-            >
-              ClarityAudit
-            </h1>
-            <p style={{ margin: 0, color: '#94A3B8', fontSize: '16px' }}>
+            <h1 style={{ fontSize: '2.5rem', margin: 0, fontWeight: 'bold' }}>ClarityAudit</h1>
+            <p style={{ color: '#8892b0', margin: '0.25rem 0 0 0' }}>
               Automated Micro-Subscription & Bill Manager
             </p>
           </div>
-
           <button
-            onClick={handleDeepAudit}
-            disabled={loadingAudit}
             style={{
-              backgroundColor: '#059669',
-              color: '#FFFFFF',
+              backgroundColor: '#00c853',
+              color: '#ffffff',
               border: 'none',
+              padding: '0.75rem 1.5rem',
               borderRadius: '8px',
-              padding: '12px 20px',
-              fontSize: '16px',
-              fontWeight: '700',
+              fontSize: '1rem',
+              fontWeight: 'bold',
               cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(5, 150, 105, 0.4)',
-              opacity: loadingAudit ? 0.6 : 1,
             }}
           >
-            {loadingAudit ? 'Scanning...' : '⚡ Run Deep Bank Audit'}
+            ⚡ Run Deep Bank Audit
           </button>
         </header>
 
-        {/* Audit Status Notification Banner */}
-        {auditMessage && (
-          <div
-            style={{
-              backgroundColor: '#064E3B',
-              border: '2px solid #10B981',
-              borderRadius: '10px',
-              padding: '16px',
-              marginBottom: '24px',
-              color: '#A7F3D0',
-              fontSize: '16px',
-              fontWeight: '600',
-            }}
-          >
-            {auditMessage}
-          </div>
-        )}
-
-        {/* High Contrast Financial Summary Cards */}
+        {/* Dashboard Metrics */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: '16px',
-            marginBottom: '28px',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: '1.5rem',
+            marginBottom: '2rem',
           }}
         >
           <div
             style={{
-              backgroundColor: '#1E293B',
-              border: '2px solid #334155',
+              backgroundColor: '#1c2541',
+              padding: '1.5rem',
               borderRadius: '12px',
-              padding: '20px',
+              border: '1px solid #3a506b',
             }}
           >
-            <p
-              style={{
-                margin: 0,
-                color: '#94A3B8',
-                fontSize: '14px',
-                fontWeight: '700',
-                textTransform: 'uppercase',
-              }}
-            >
-              Total Monthly Burn
+            <p style={{ color: '#8892b0', fontSize: '0.85rem', margin: '0 0 0.5rem 0' }}>
+              TOTAL MONTHLY BURN
             </p>
-            <p
-              style={{
-                margin: '8px 0 0 0',
-                fontSize: '32px',
-                fontWeight: '800',
-                color: '#FB7185',
-              }}
-            >
-              ${totalMonthlySpend}
-            </p>
+            <h2 style={{ fontSize: '2.2rem', color: '#ff4d6d', margin: 0 }}>$70.98</h2>
           </div>
 
           <div
             style={{
-              backgroundColor: '#1E293B',
-              border: '2px solid #334155',
+              backgroundColor: '#1c2541',
+              padding: '1.5rem',
               borderRadius: '12px',
-              padding: '20px',
+              border: '1px solid #3a506b',
             }}
           >
-            <p
-              style={{
-                margin: 0,
-                color: '#94A3B8',
-                fontSize: '14px',
-                fontWeight: '700',
-                textTransform: 'uppercase',
-              }}
-            >
-              Active Subscriptions
+            <p style={{ color: '#8892b0', fontSize: '0.85rem', margin: '0 0 0.5rem 0' }}>
+              ACTIVE SUBSCRIPTIONS
             </p>
-            <p
-              style={{
-                margin: '8px 0 0 0',
-                fontSize: '32px',
-                fontWeight: '800',
-                color: '#38BDF8',
-              }}
-            >
-              {
-                subscriptions.filter((s) => s.status !== 'Cancelled ($Saved)')
-                  .length
-              }
-            </p>
+            <h2 style={{ fontSize: '2.2rem', color: '#00b4d8', margin: 0 }}>3</h2>
           </div>
 
           <div
             style={{
-              backgroundColor: '#1E293B',
-              border: '2px solid #334155',
+              backgroundColor: '#1c2541',
+              padding: '1.5rem',
               borderRadius: '12px',
-              padding: '20px',
+              border: '1px solid #3a506b',
             }}
           >
-            <p
-              style={{
-                margin: 0,
-                color: '#94A3B8',
-                fontSize: '14px',
-                fontWeight: '700',
-                textTransform: 'uppercase',
-              }}
-            >
-              Zombie Bills Found
+            <p style={{ color: '#8892b0', fontSize: '0.85rem', margin: '0 0 0.5rem 0' }}>
+              ZOMBIE BILLS FOUND
             </p>
-            <p
-              style={{
-                margin: '8px 0 0 0',
-                fontSize: '32px',
-                fontWeight: '800',
-                color: '#FBBF24',
-              }}
-            >
-              {
-                subscriptions.filter(
-                  (s) => s.isHiddenOrUnused && s.status !== 'Cancelled ($Saved)'
-                ).length
-              }
-            </p>
+            <h2 style={{ fontSize: '2.2rem', color: '#ffb703', margin: 0 }}>1</h2>
           </div>
         </div>
 
-        {/* ACCESSIBLE FORM: Add New Subscription */}
+        {/* Add Subscription Form */}
         <div
           style={{
-            backgroundColor: '#1E293B',
-            border: '2px solid #3B82F6',
+            backgroundColor: '#1c2541',
+            padding: '1.5rem',
             borderRadius: '12px',
-            padding: '20px',
-            marginBottom: '28px',
+            border: '1px solid #3a506b',
+            marginBottom: '2rem',
           }}
         >
-          <h2
-            style={{
-              margin: '0 0 16px 0',
-              fontSize: '18px',
-              color: '#60A5FA',
-              fontWeight: '700',
-            }}
-          >
-            + Add New Subscription
-          </h2>
-          <form
-            onSubmit={handleAddSubscription}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-              gap: '12px',
-            }}
-          >
+          <h3 style={{ margin: '0 0 1rem 0', color: '#4cc9f0' }}>+ Add New Subscription</h3>
+          <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
             <input
               type="text"
               placeholder="Name (e.g. Spotify)"
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
               style={{
-                backgroundColor: '#0F172A',
-                color: '#FFFFFF',
-                border: '2px solid #475569',
-                borderRadius: '8px',
-                padding: '12px',
-                fontSize: '15px',
+                flex: 1,
+                minWidth: '180px',
+                padding: '0.75rem',
+                backgroundColor: '#0b132b',
+                border: '1px solid #3a506b',
+                borderRadius: '6px',
+                color: '#fff',
               }}
             />
             <input
               type="number"
-              step="0.01"
               placeholder="Cost ($)"
-              value={newCost}
-              onChange={(e) => setNewCost(e.target.value)}
               style={{
-                backgroundColor: '#0F172A',
-                color: '#FFFFFF',
-                border: '2px solid #475569',
-                borderRadius: '8px',
-                padding: '12px',
-                fontSize: '15px',
+                width: '120px',
+                padding: '0.75rem',
+                backgroundColor: '#0b132b',
+                border: '1px solid #3a506b',
+                borderRadius: '6px',
+                color: '#fff',
               }}
             />
             <select
-              value={newCategory}
-              onChange={(e) => setNewCategory(e.target.value)}
               style={{
-                backgroundColor: '#0F172A',
-                color: '#FFFFFF',
-                border: '2px solid #475569',
-                borderRadius: '8px',
-                padding: '12px',
-                fontSize: '15px',
+                padding: '0.75rem',
+                backgroundColor: '#0b132b',
+                border: '1px solid #3a506b',
+                borderRadius: '6px',
+                color: '#fff',
               }}
             >
-              <option value="Streaming">Streaming</option>
-              <option value="Utilities">Utilities</option>
-              <option value="Fitness">Fitness</option>
-              <option value="Software">Software</option>
-              <option value="Gaming">Gaming</option>
+              <option>Streaming</option>
+              <option>Utilities</option>
+              <option>Software</option>
             </select>
             <button
-              type="submit"
               style={{
-                backgroundColor: '#2563EB',
-                color: '#FFFFFF',
+                backgroundColor: '#3a86ff',
+                color: '#fff',
                 border: 'none',
-                borderRadius: '8px',
-                padding: '12px',
-                fontSize: '16px',
-                fontWeight: '700',
+                padding: '0.75rem 1.5rem',
+                borderRadius: '6px',
+                fontWeight: 'bold',
                 cursor: 'pointer',
               }}
             >
               Add Subscription
             </button>
-          </form>
+          </div>
         </div>
 
-        {/* Subscriptions List */}
+        {/* Detected Charges List */}
         <div
           style={{
-            backgroundColor: '#1E293B',
-            border: '2px solid #334155',
+            backgroundColor: '#1c2541',
+            padding: '1.5rem',
             borderRadius: '12px',
-            overflow: 'hidden',
+            border: '1px solid #3a506b',
           }}
         >
-          {/* Header & Prominent Filter Tabs */}
+          <h3 style={{ margin: '0 0 1.5rem 0' }}>Detected Charges</h3>
+
           <div
             style={{
-              padding: '20px',
-              borderBottom: '2px solid #334155',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
+              padding: '1rem 0',
+              borderBottom: '1px solid #3a506b',
               flexWrap: 'wrap',
-              gap: '12px',
+              gap: '1rem',
             }}
           >
-            <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '700' }}>
-              Detected Charges
-            </h2>
-
-            <div style={{ display: 'flex', gap: '8px' }}>
-              {['All', 'Active', 'Cancelled'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setFilter(tab)}
-                  style={{
-                    backgroundColor: filter === tab ? '#3B82F6' : '#0F172A',
-                    color: filter === tab ? '#FFFFFF' : '#94A3B8',
-                    border: '2px solid #334155',
-                    borderRadius: '8px',
-                    padding: '8px 16px',
-                    fontWeight: '700',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                  }}
-                >
-                  {tab}
-                </button>
-              ))}
+            <div>
+              <h4 style={{ margin: 0, fontSize: '1.1rem' }}>Netflix Premium</h4>
+              <p style={{ margin: '0.25rem 0 0 0', color: '#8892b0', fontSize: '0.85rem' }}>
+                Category: Streaming • Last charged: 2 days ago
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>$22.99/mo</span>
+              <button
+                style={{
+                  backgroundColor: '#e63946',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+              >
+                1-Tap Cancel
+              </button>
+              <button
+                style={{
+                  backgroundColor: 'transparent',
+                  color: '#8892b0',
+                  border: '1px solid #3a506b',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                }}
+              >
+                Delete
+              </button>
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {displayedSubscriptions.length === 0 ? (
-              <p
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '1rem 0',
+              flexWrap: 'wrap',
+              gap: '1rem',
+            }}
+          >
+            <div>
+              <h4 style={{ margin: 0, fontSize: '1.1rem' }}>Cloud Storage 200GB</h4>
+              <p style={{ margin: '0.25rem 0 0 0', color: '#8892b0', fontSize: '0.85rem' }}>
+                Category: Utilities • Last charged: 5 days ago
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+              <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>$2.99/mo</span>
+              <button
                 style={{
-                  padding: '24px',
-                  textAlign: 'center',
-                  color: '#94A3B8',
-                  margin: 0,
+                  backgroundColor: '#e63946',
+                  color: '#fff',
+                  border: 'none',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
                 }}
               >
-                No subscriptions found in this view.
-              </p>
-            ) : (
-              displayedSubscriptions.map((sub) => (
-                <div
-                  key={sub.id}
-                  style={{
-                    padding: '16px 20px',
-                    borderBottom: '1px solid #334155',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '12px',
-                    flexWrap: 'wrap',
-                  }}
-                >
-                  <div>
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: '18px',
-                          fontWeight: '700',
-                          color: '#FFFFFF',
-                        }}
-                      >
-                        {sub.name}
-                      </span>
-                      {sub.isHiddenOrUnused &&
-                        sub.status !== 'Cancelled ($Saved)' && (
-                          <span
-                            style={{
-                              backgroundColor: '#9F1239',
-                              color: '#FECDD3',
-                              padding: '4px 8px',
-                              borderRadius: '6px',
-                              fontSize: '12px',
-                              fontWeight: '800',
-                            }}
-                          >
-                            ⚠️ UNUSED / HIDDEN
-                          </span>
-                        )}
-                    </div>
-                    <p
-                      style={{
-                        margin: '4px 0 0 0',
-                        fontSize: '14px',
-                        color: '#94A3B8',
-                      }}
-                    >
-                      Category: {sub.category} • Last charged: {sub.lastCharged}
-                    </p>
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '12px',
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: '20px',
-                        fontWeight: '800',
-                        color: '#FFFFFF',
-                      }}
-                    >
-                      ${sub.cost.toFixed(2)}/mo
-                    </span>
-
-                    {sub.status === 'Cancelled ($Saved)' ? (
-                      <span
-                        style={{
-                          backgroundColor: '#334155',
-                          color: '#94A3B8',
-                          padding: '8px 14px',
-                          borderRadius: '6px',
-                          fontSize: '14px',
-                          fontWeight: '700',
-                        }}
-                      >
-                        Cancelled
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => handleCancelSubscription(sub.id)}
-                        style={{
-                          backgroundColor: '#DC2626',
-                          color: '#FFFFFF',
-                          border: 'none',
-                          borderRadius: '8px',
-                          padding: '10px 16px',
-                          fontSize: '14px',
-                          fontWeight: '800',
-                          cursor: 'pointer',
-                        }}
-                      >
-                        1-Tap Cancel
-                      </button>
-                    )}
-
-                    <button
-                      onClick={() => handleDeleteSubscription(sub.id)}
-                      style={{
-                        backgroundColor: '#334155',
-                        color: '#F8FAFC',
-                        border: 'none',
-                        borderRadius: '6px',
-                        padding: '10px 14px',
-                        fontSize: '14px',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                      }}
-                      title="Delete subscription"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+                1-Tap Cancel
+              </button>
+              <button
+                style={{
+                  backgroundColor: 'transparent',
+                  color: '#8892b0',
+                  border: '1px solid #3a506b',
+                  padding: '0.5rem 1rem',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                }}
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       </div>
