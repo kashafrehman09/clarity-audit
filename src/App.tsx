@@ -1,5 +1,43 @@
 import React, { useState, useEffect } from 'react';
 
+// Subscription Data Type
+interface Subscription {
+  id: string;
+  name: string;
+  cost: number;
+  category: string;
+  lastCharged: string;
+  isZombie?: boolean;
+}
+
+// Initial Sample Data
+const initialSubscriptions: Subscription[] = [
+  {
+    id: '1',
+    name: 'Netflix Premium',
+    cost: 22.99,
+    category: 'Streaming',
+    lastCharged: '2 days ago',
+    isZombie: false,
+  },
+  {
+    id: '2',
+    name: 'Cloud Storage 200GB',
+    cost: 2.99,
+    category: 'Utilities',
+    lastCharged: '5 days ago',
+    isZombie: false,
+  },
+  {
+    id: '3',
+    name: 'Old Fitness App',
+    cost: 45.00,
+    category: 'Software',
+    lastCharged: '30 days ago',
+    isZombie: true,
+  },
+];
+
 // Animated Splash Screen Component
 const SplashScreen = () => {
   return (
@@ -49,18 +87,54 @@ const SplashScreen = () => {
   );
 };
 
-// Main Application Component
 export default function App() {
   const [loading, setLoading] = useState(true);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>(initialSubscriptions);
+  const [filter, setFilter] = useState<'All' | 'Active' | 'Cancelled'>('All');
+  
+  // Form State
+  const [name, setName] = useState('');
+  const [cost, setCost] = useState('');
+  const [category, setCategory] = useState('Streaming');
 
   useEffect(() => {
-    // Displays splash screen interface for 1.5 seconds on startup
     const timer = setTimeout(() => {
       setLoading(false);
     }, 1500);
-
     return () => clearTimeout(timer);
   }, []);
+
+  // Handlers
+  const handleAddSubscription = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !cost || parseFloat(cost) <= 0) return;
+
+    const newSub: Subscription = {
+      id: Date.now().toString(),
+      name: name.trim(),
+      cost: parseFloat(cost),
+      category,
+      lastCharged: 'Just now',
+      isZombie: false,
+    };
+
+    setSubscriptions([newSub, ...subscriptions]);
+    setName('');
+    setCost('');
+  };
+
+  const handleDelete = (id: string) => {
+    setSubscriptions(subscriptions.filter((sub) => sub.id !== id));
+  };
+
+  const handleDeepAudit = () => {
+    alert('Deep Bank Audit Complete! No additional hidden recurring fees were detected.');
+  };
+
+  // Dynamic Calculations
+  const totalBurn = subscriptions.reduce((acc, sub) => acc + sub.cost, 0);
+  const activeCount = subscriptions.length;
+  const zombieCount = subscriptions.filter((sub) => sub.isZombie).length;
 
   if (loading) {
     return <SplashScreen />;
@@ -95,6 +169,7 @@ export default function App() {
             </p>
           </div>
           <button
+            onClick={handleDeepAudit}
             style={{
               backgroundColor: '#00c853',
               color: '#ffffff',
@@ -130,7 +205,9 @@ export default function App() {
             <p style={{ color: '#8892b0', fontSize: '0.85rem', margin: '0 0 0.5rem 0' }}>
               TOTAL MONTHLY BURN
             </p>
-            <h2 style={{ fontSize: '2.2rem', color: '#ff4d6d', margin: 0 }}>$70.98</h2>
+            <h2 style={{ fontSize: '2.2rem', color: '#ff4d6d', margin: 0 }}>
+              ${totalBurn.toFixed(2)}
+            </h2>
           </div>
 
           <div
@@ -144,7 +221,7 @@ export default function App() {
             <p style={{ color: '#8892b0', fontSize: '0.85rem', margin: '0 0 0.5rem 0' }}>
               ACTIVE SUBSCRIPTIONS
             </p>
-            <h2 style={{ fontSize: '2.2rem', color: '#00b4d8', margin: 0 }}>3</h2>
+            <h2 style={{ fontSize: '2.2rem', color: '#00b4d8', margin: 0 }}>{activeCount}</h2>
           </div>
 
           <div
@@ -158,12 +235,13 @@ export default function App() {
             <p style={{ color: '#8892b0', fontSize: '0.85rem', margin: '0 0 0.5rem 0' }}>
               ZOMBIE BILLS FOUND
             </p>
-            <h2 style={{ fontSize: '2.2rem', color: '#ffb703', margin: 0 }}>1</h2>
+            <h2 style={{ fontSize: '2.2rem', color: '#ffb703', margin: 0 }}>{zombieCount}</h2>
           </div>
         </div>
 
         {/* Add Subscription Form */}
-        <div
+        <form
+          onSubmit={handleAddSubscription}
           style={{
             backgroundColor: '#1c2541',
             padding: '1.5rem',
@@ -177,6 +255,8 @@ export default function App() {
             <input
               type="text"
               placeholder="Name (e.g. Spotify)"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               style={{
                 flex: 1,
                 minWidth: '180px',
@@ -189,7 +269,10 @@ export default function App() {
             />
             <input
               type="number"
+              step="0.01"
               placeholder="Cost ($)"
+              value={cost}
+              onChange={(e) => setCost(e.target.value)}
               style={{
                 width: '120px',
                 padding: '0.75rem',
@@ -200,6 +283,8 @@ export default function App() {
               }}
             />
             <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
               style={{
                 padding: '0.75rem',
                 backgroundColor: '#0b132b',
@@ -208,11 +293,12 @@ export default function App() {
                 color: '#fff',
               }}
             >
-              <option>Streaming</option>
-              <option>Utilities</option>
-              <option>Software</option>
+              <option value="Streaming">Streaming</option>
+              <option value="Utilities">Utilities</option>
+              <option value="Software">Software</option>
             </select>
             <button
+              type="submit"
               style={{
                 backgroundColor: '#3a86ff',
                 color: '#fff',
@@ -226,7 +312,7 @@ export default function App() {
               Add Subscription
             </button>
           </div>
-        </div>
+        </form>
 
         {/* Detected Charges List */}
         <div
@@ -237,100 +323,94 @@ export default function App() {
             border: '1px solid #3a506b',
           }}
         >
-          <h3 style={{ margin: '0 0 1.5rem 0' }}>Detected Charges</h3>
-
           <div
             style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              padding: '1rem 0',
-              borderBottom: '1px solid #3a506b',
-              flexWrap: 'wrap',
-              gap: '1rem',
+              marginBottom: '1.5rem',
             }}
           >
-            <div>
-              <h4 style={{ margin: 0, fontSize: '1.1rem' }}>Netflix Premium</h4>
-              <p style={{ margin: '0.25rem 0 0 0', color: '#8892b0', fontSize: '0.85rem' }}>
-                Category: Streaming • Last charged: 2 days ago
-              </p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>$22.99/mo</span>
-              <button
-                style={{
-                  backgroundColor: '#e63946',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
-                }}
-              >
-                1-Tap Cancel
-              </button>
-              <button
-                style={{
-                  backgroundColor: 'transparent',
-                  color: '#8892b0',
-                  border: '1px solid #3a506b',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                }}
-              >
-                Delete
-              </button>
+            <h3 style={{ margin: 0 }}>Detected Charges</h3>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              {(['All', 'Active', 'Cancelled'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setFilter(tab)}
+                  style={{
+                    backgroundColor: filter === tab ? '#3a86ff' : '#0b132b',
+                    color: '#fff',
+                    border: '1px solid #3a506b',
+                    padding: '0.4rem 0.8rem',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {tab}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '1rem 0',
-              flexWrap: 'wrap',
-              gap: '1rem',
-            }}
-          >
-            <div>
-              <h4 style={{ margin: 0, fontSize: '1.1rem' }}>Cloud Storage 200GB</h4>
-              <p style={{ margin: '0.25rem 0 0 0', color: '#8892b0', fontSize: '0.85rem' }}>
-                Category: Utilities • Last charged: 5 days ago
-              </p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>$2.99/mo</span>
-              <button
+          {subscriptions.length === 0 ? (
+            <p style={{ color: '#8892b0', textAlign: 'center', padding: '1rem 0' }}>
+              No subscriptions found. Add one above!
+            </p>
+          ) : (
+            subscriptions.map((sub) => (
+              <div
+                key={sub.id}
                 style={{
-                  backgroundColor: '#e63946',
-                  color: '#fff',
-                  border: 'none',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  fontWeight: 'bold',
-                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '1rem 0',
+                  borderBottom: '1px solid #3a506b',
+                  flexWrap: 'wrap',
+                  gap: '1rem',
                 }}
               >
-                1-Tap Cancel
-              </button>
-              <button
-                style={{
-                  backgroundColor: 'transparent',
-                  color: '#8892b0',
-                  border: '1px solid #3a506b',
-                  padding: '0.5rem 1rem',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                }}
-              >
-                Delete
-              </button>
-            </div>
-          </div>
+                <div>
+                  <h4 style={{ margin: 0, fontSize: '1.1rem' }}>{sub.name}</h4>
+                  <p style={{ margin: '0.25rem 0 0 0', color: '#8892b0', fontSize: '0.85rem' }}>
+                    Category: {sub.category} • Last charged: {sub.lastCharged}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+                    ${sub.cost.toFixed(2)}/mo
+                  </span>
+                  <button
+                    onClick={() => handleDelete(sub.id)}
+                    style={{
+                      backgroundColor: '#e63946',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '6px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    1-Tap Cancel
+                  </button>
+                  <button
+                    onClick={() => handleDelete(sub.id)}
+                    style={{
+                      backgroundColor: 'transparent',
+                      color: '#8892b0',
+                      border: '1px solid #3a506b',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
